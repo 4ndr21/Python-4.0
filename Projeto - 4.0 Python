@@ -1,0 +1,35 @@
+import paho.mqtt.client as mqtt
+
+BROKER_ADDRESS = "broker.hivemq.com"
+BROKER_PORT = 1883
+TOPIC = "industria4.0/temperatura"
+
+def on_message(client, userdata, message):
+    payload = message.payload.decode("utf-8")
+    print(f"Dados recebidos: {payload}")
+
+    process_data(payload)
+
+def process_data(payload):
+    data = json.loads(payload)
+    temperatura = data["temperatura"]
+
+    if temperatura > 60:
+        print(f"ALERTA: Temperatura elevada detectada ({temperatura}ºC)")
+
+def on_connect(client, userdata, flags, rc):
+    if rc == 0:
+        print("Conectado ao broker MQTT!")
+        client.subscribe(TOPIC)
+    else:
+        print("Falha na conexão. Código:", rc)
+
+def cloud_application():
+    client = mqtt.Client("CloudService")
+    client.on_connect = on_connect
+    client.on_message = on_message
+
+    client.connect(BROKER_ADDRESS, BROKER_PORT, 60)
+    client.loop_forever()
+
+cloud_application()
